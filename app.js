@@ -5,23 +5,6 @@ const app = express();
 
 app.use(express.urlencoded({extended:true}));
 
-
-// ------ Middleware ------
-const extractNToken = (req,res,next) =>{
-    // Get Auth header value
-    // Authorization: Bearer <access_token>
-    const bearerHeader = req.headers["authorization"];
-    // Check if undefined
-    if(typeof bearerHeader !== "undefined"){
-        const bearerToken =  bearerHeader.split(" ")[1]
-        //set token
-        req.token = bearerToken
-        next();
-    }else{
-        //Forbidden
-        res.status(403).send({})
-    }
-}
 const verifyToken = (req,res,next) =>{
     const bearerHeader = req.headers["authorization"];
     // Check if undefined
