@@ -7,7 +7,7 @@ app.use(express.urlencoded({extended:true}));
 
 
 // ------ Middleware ------
-const extractToken = (req,res,next) =>{
+const extractNToken = (req,res,next) =>{
     // Get Auth header value
     // Authorization: Bearer <access_token>
     const bearerHeader = req.headers["authorization"];
@@ -23,15 +23,23 @@ const extractToken = (req,res,next) =>{
     }
 }
 const verifyToken = (req,res,next) =>{
-    let decoded = jwt.verify(req.token,'mysecret',(err,payload)=>{
-        if(err){
-            res.status(403).send({})
-        }else{
-            //append decoded user object to req.user
-            req.user = payload.user
-            next();
-        }
-    });   
+    const bearerHeader = req.headers["authorization"];
+    // Check if undefined
+    if(typeof bearerHeader !== "undefined"){
+        const bearerToken =  bearerHeader.split(" ")[1]
+        //decode token
+        let decoded = jwt.verify(bearerToken,'mysecret',(err,payload)=>{
+            if(err){
+                res.status(403).send({})
+            }else{
+                req.user = payload.user
+                next();
+            }
+        });   
+    }else{
+        //Forbidden
+        res.status(403).send({})
+    }
 }
 const createPerm = (req,res,next) =>{
     let permissions = req.user.role
@@ -97,19 +105,19 @@ app.post('/api/login',(req,res)=>{
 })
 
 // ----- Protected Routes -----
-app.post("/api/create",extractToken,verifyToken,createPerm,(req,res)=>{
+app.post("/api/create",verifyToken,createPerm,(req,res)=>{
     res.send({
         msg:"Post created",
         user:req.user
     })
 })
-app.put("/api/update",extractToken,verifyToken,updatePerm,(req,res)=>{
+app.put("/api/update",verifyToken,updatePerm,(req,res)=>{
     res.send({
         msg:"Post created",
         user:req.user
     })
 })
-app.delete("/api/delete",extractToken,verifyToken,deletePerm,(req,res)=>{
+app.delete("/api/delete",verifyToken,deletePerm,(req,res)=>{
     res.send({
         msg:"Post created",
         user:req.user
